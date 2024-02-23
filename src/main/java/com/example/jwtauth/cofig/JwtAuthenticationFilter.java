@@ -16,7 +16,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
@@ -45,10 +47,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         var username = jwtTokenUtil.extractUsername(jwt);
 
         if (StringUtils.isNotEmpty(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userService
-                    .userDetailsService()
-                    .loadUserByUsername(username);
-
+            UserDetails userDetails = userService.userDetailsService().loadUserByUsername(username);
+            if (jwtTokenUtil.isRefreshToken(jwt)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setCharacterEncoding(StandardCharsets.UTF_8.toString());
+                response.getWriter().write("Это не аксес токен");
+                return;
+//                throw new NotValidTokenException("Это не аксес токен");
+            }
             // Если токен валиден, то аутентифицируем пользователя
             if (jwtTokenUtil.validateToken(jwt, userDetails)) {
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
