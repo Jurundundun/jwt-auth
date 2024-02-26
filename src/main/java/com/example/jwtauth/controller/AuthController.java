@@ -3,23 +3,19 @@ package com.example.jwtauth.controller;
 import com.example.jwtauth.domain.dto.AuthenticationRequest;
 import com.example.jwtauth.domain.dto.AuthenticationResponse;
 import com.example.jwtauth.domain.dto.RegistrationRequest;
-import com.example.jwtauth.service.AuthService;
-import com.example.jwtauth.service.UserService;
+import com.example.jwtauth.service.auth.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
-    private final UserService userService;
 
-    @PostMapping("/auth")
+    @PostMapping
     public AuthenticationResponse authenticateUser(@RequestBody @Valid AuthenticationRequest authenticationRequest) {
         return authService.authenticateUser(authenticationRequest);
     }
@@ -32,16 +28,5 @@ public class AuthController {
     public void registerUser(@RequestBody @Valid RegistrationRequest registrationRequest) {
         authService.registerUser(registrationRequest);
     }
-    @GetMapping("/me")
-    public String getLoggedInUsername() {
-        return userService.getUsernameFromAuthorizedUser();
-    }
-    @GetMapping("/user")
-    public List<String> getAllUsernames() {
-        return userService.getAllUsernames();
-    }
-    @GetMapping("/user-only-access")
-    public String getMessageForUser() {
-        return "Авторизован";
-    }
+
 }

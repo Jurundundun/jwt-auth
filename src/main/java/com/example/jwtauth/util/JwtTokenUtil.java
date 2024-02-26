@@ -1,14 +1,20 @@
 package com.example.jwtauth.util;
 
 import com.example.jwtauth.error.NotValidTokenException;
+import com.example.jwtauth.service.user.UserService;
 import io.jsonwebtoken.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
+import static com.example.jwtauth.domain.enumm.TokenType.ACCESS;
+import static com.example.jwtauth.domain.enumm.TokenType.REFRESH;
+
 @Component
+@RequiredArgsConstructor
 public class JwtTokenUtil {
 
     @Value("${jwt.secret}")
@@ -19,13 +25,14 @@ public class JwtTokenUtil {
 
     @Value("${jwt.refreshTokenExpirationMs}")
     private long refreshTokenExpirationMs;
+    private final UserService userService;
 
     public String generateAccessToken(UserDetails userDetails) {
-        return generateToken(userDetails, accessTokenExpirationMs,"access");
+        return generateToken(userDetails, accessTokenExpirationMs, ACCESS.name());
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return generateToken(userDetails, refreshTokenExpirationMs,"refresh");
+        return generateToken(userDetails, refreshTokenExpirationMs,REFRESH.name());
     }
 
     public String extractUsername(String token) {
@@ -46,7 +53,7 @@ public class JwtTokenUtil {
         Date expirationDate = new Date(now.getTime() + expirationMs);
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
-                .claim("type", tokenType) // Указываем тип токена
+                .claim("type", tokenType)
                 .setIssuedAt(now)
                 .setExpiration(expirationDate)
                 .signWith(SignatureAlgorithm.HS512, secret)
@@ -67,8 +74,19 @@ public class JwtTokenUtil {
     }
     public boolean isRefreshToken(String token) {
         Claims claims = Jwts.parser().setSigningKey(secret).build().parseClaimsJws(token).getBody();
-        // Проверяем наличие атрибута "type" и сравниваем его значение с "refresh"
-        return claims.containsKey("type") && claims.get("type").equals("refresh");
+        return claims.containsKey("type") && claims.get("type").equals(REFRESH.name());
+    }
+
+    public UserDetails validateTokenAndGetUserDetails(String jwt) {
+        String username = extractUsername(jwt);
+
+        UserDetails userDetails = userService.loadUserByUsername(username);
+
+        if (validateToken(jwt, userDetails)) {
+            return userDetails;
+        } else {
+            throw new NotValidTokenException("Invalid or expired token");
+        }
     }
 
 }

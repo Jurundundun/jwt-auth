@@ -1,7 +1,7 @@
-package com.example.jwtauth.cofig;
+package com.example.jwtauth.config;
 
 import com.example.jwtauth.domain.enumm.Role;
-import com.example.jwtauth.service.UserService;
+import com.example.jwtauth.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,11 +43,17 @@ public class SecurityConfig {
                     return corsConfiguration;
                 }))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers( "/api/v1/user")
+                        .requestMatchers(
+                                "/api/v1/user")
                             .hasRole(Role.ADMIN.name())
-                        .requestMatchers( "/api/v1/user-only-access")
+                        .requestMatchers(
+                                "/api/v1/user/only-access")
                             .hasRole(Role.USER.name())
-                        .requestMatchers("/api/v1/register", "/api/v1/auth", "/api/v1/refresh","/api/v1/me")
+                        .requestMatchers(
+                                "/api/v1/auth/register",
+                                "/api/v1/auth",
+                                "/api/v1/auth/refresh",
+                                "/api/v1/me")
                             .permitAll()
                         .anyRequest().authenticated()
                 )
@@ -66,7 +72,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userService.userDetailsService());
+        authProvider.setUserDetailsService(userService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
