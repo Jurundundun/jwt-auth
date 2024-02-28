@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
-import static com.example.jwtauth.domain.enumm.TokenType.ACCESS;
-import static com.example.jwtauth.domain.enumm.TokenType.REFRESH;
+import static com.example.jwtauth.domain.enumerated.TokenType.ACCESS;
+import static com.example.jwtauth.domain.enumerated.TokenType.REFRESH;
 
 @Component
 @RequiredArgsConstructor
@@ -34,20 +34,6 @@ public class JwtTokenUtil {
     public String generateRefreshToken(UserDetails userDetails) {
         return generateToken(userDetails, refreshTokenExpirationMs,REFRESH.name());
     }
-
-    public String extractUsername(String token) {
-        return Jwts.parser().setSigningKey(secret).build().parseClaimsJws(token)
-                .getBody().getSubject();
-    }
-
-    public boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        if (isTokenExpired(token)){
-            throw new NotValidTokenException("Токен истек");
-        }
-        return username.equals(userDetails.getUsername());
-    }
-
     private String generateToken(UserDetails userDetails, long expirationMs, String tokenType) {
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + expirationMs);
@@ -60,33 +46,27 @@ public class JwtTokenUtil {
                 .compact();
     }
 
-
-    private boolean isTokenExpired(String token) {
+    public String extractUsername(String token) {
         try {
-            Date expiration = Jwts.parser().setSigningKey(secret).build().parseClaimsJws(token)
-                    .getBody().getExpiration();
-            return expiration.before(new Date());
-        } catch (ExpiredJwtException ex) {
-            return true;
-        } catch (JwtException ex) {
-            return true;
+            return getPayloadByToken(token).getSubject();
+        }catch (ExpiredJwtException e){
+            throw new NotValidTokenException("Токен истек");
+        }catch (Exception e){
+            throw new NotValidTokenException("Неверный токен");
         }
     }
+
     public boolean isRefreshToken(String token) {
-        Claims claims = Jwts.parser().setSigningKey(secret).build().parseClaimsJws(token).getBody();
+        Claims claims = getPayloadByToken(token);
         return claims.containsKey("type") && claims.get("type").equals(REFRESH.name());
     }
 
-    public UserDetails validateTokenAndGetUserDetails(String jwt) {
-        String username = extractUsername(jwt);
+    public UserDetails findUserDetailsByJwt(String jwt) {
+        return userService.loadUserByUsername(extractUsername(jwt));
+    }
 
-        UserDetails userDetails = userService.loadUserByUsername(username);
-
-        if (validateToken(jwt, userDetails)) {
-            return userDetails;
-        } else {
-            throw new NotValidTokenException("Invalid or expired token");
-        }
+    private Claims getPayloadByToken(String token){
+        return Jwts.parser().setSigningKey(secret).build().parseClaimsJws(token).getPayload();
     }
 
 }

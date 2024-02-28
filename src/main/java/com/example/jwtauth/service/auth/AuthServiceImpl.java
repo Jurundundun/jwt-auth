@@ -4,7 +4,7 @@ import com.example.jwtauth.domain.dto.AuthenticationRequest;
 import com.example.jwtauth.domain.dto.AuthenticationResponse;
 import com.example.jwtauth.domain.dto.RegistrationRequest;
 import com.example.jwtauth.domain.entity.User;
-import com.example.jwtauth.domain.enumm.Role;
+import com.example.jwtauth.domain.enumerated.Role;
 import com.example.jwtauth.error.CredentialsAlreadyExistsException;
 import com.example.jwtauth.error.NotValidTokenException;
 import com.example.jwtauth.service.user.UserService;
@@ -41,13 +41,7 @@ public class AuthServiceImpl implements AuthService {
         if (!jwtTokenUtil.isRefreshToken(refreshToken)) {
             throw new NotValidTokenException("Это не рефреш токен");
         }
-
-        String username = jwtTokenUtil.extractUsername(refreshToken);
-        UserDetails userDetails = userService.loadUserByUsername(username);
-
-        if (!jwtTokenUtil.validateToken(refreshToken, userDetails)) {
-            throw new NotValidTokenException("Неверный токен");
-        }
+        UserDetails userDetails = jwtTokenUtil.findUserDetailsByJwt(refreshToken);
 
         return new AuthenticationResponse(jwtTokenUtil.generateRefreshToken(userDetails),
                 jwtTokenUtil.generateAccessToken(userDetails));

@@ -1,6 +1,6 @@
 package com.example.jwtauth.config;
 
-import com.example.jwtauth.domain.enumm.Role;
+import com.example.jwtauth.domain.enumerated.Role;
 import com.example.jwtauth.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -52,8 +52,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/auth/register",
                                 "/api/v1/auth",
-                                "/api/v1/auth/refresh",
-                                "/api/v1/me")
+                                "/api/v1/auth/refresh"
+                        )
                             .permitAll()
                         .anyRequest().authenticated()
                 )

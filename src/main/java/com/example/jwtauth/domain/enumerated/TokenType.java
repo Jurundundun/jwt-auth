@@ -1,4 +1,4 @@
-package com.example.jwtauth.domain.enumm;
+package com.example.jwtauth.domain.enumerated;
 
 public enum TokenType {
     ACCESS,

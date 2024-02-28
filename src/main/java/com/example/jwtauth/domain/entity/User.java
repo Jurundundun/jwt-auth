@@ -1,6 +1,6 @@
 package com.example.jwtauth.domain.entity;
 
-import com.example.jwtauth.domain.enumm.Role;
+import com.example.jwtauth.domain.enumerated.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,7 +15,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "_user")
+@Table(name = "\"user\"")
 public class User implements UserDetails {
 
     @Id

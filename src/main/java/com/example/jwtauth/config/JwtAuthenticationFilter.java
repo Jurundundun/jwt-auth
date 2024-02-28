@@ -39,11 +39,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         String jwt = authHeader.substring(BEARER_PREFIX.length());
 
-        try {
-            UserDetails userDetails = jwtTokenUtil.validateTokenAndGetUserDetails(jwt);
+        if(!jwtTokenUtil.isRefreshToken(jwt)) {
+            UserDetails userDetails = jwtTokenUtil.findUserDetailsByJwt(jwt);
             securityContextService.authenticateUserInContextHolder(userDetails, request);
-        } catch (NotValidTokenException e) {
-            exceptionResolver.handleNotValidTokenException(request,response,e);
+        } else  {
+            exceptionResolver.handleNotValidTokenException(request,response,
+                    new NotValidTokenException("Это не аксес токен"));
             return;
         }
 
